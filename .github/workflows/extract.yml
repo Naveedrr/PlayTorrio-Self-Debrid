@@ -1,0 +1,37 @@
+name: Extract PlayTorrio Project
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          mkdir -p extracted
+          unzip -q "PlayTorrioV2-Self-Debrid-Codemagic.zip" -d extracted
+
+          if [ -d "extracted/PlayTorrioV2-Self-Debrid-Codemagic" ]; then
+            cp -a "extracted/PlayTorrioV2-Self-Debrid-Codemagic/." .
+          else
+            cp -a "extracted/." .
+          fi
+
+          rm -rf extracted
+          rm -f "PlayTorrioV2-Self-Debrid-Codemagic.zip"
+
+      - name: Commit extracted project
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Extract PlayTorrio Self-Debrid project" || echo "Nothing to commit"
+          git push
