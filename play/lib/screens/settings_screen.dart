@@ -141,138 +141,197 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _nuvioAddons = list);
   }
 
-  Future<void> _loadSettings() async {
-    final streaming = await _settings.isStreamingModeEnabled();
-    final externalPlayer = await _settings.getExternalPlayer();
-    final sort = await _settings.getSortPreference();
-    final useDebrid = await _settings.useDebridForStreams();
-    final service = await _settings.getDebridService();
-    final addons = await _settings.getStremioAddons();
-    final torboxKey = await _debrid.getTorBoxKey();
-    final alldebridKey = await _debrid.getAllDebridKey();
-    final premiumizeKey = await _debrid.getPremiumizeKey();
-    final debridlinkKey = await _debrid.getDebridLinkKey();
-    final rdToken = await _debrid.getRDAccessToken();
-    
-    // Load Trakt status
-    final traktLoggedIn = await _trakt.isLoggedIn();
-    String? traktUser;
-    Map<String, dynamic>? traktStats;
-    if (traktLoggedIn) {
-      final profile = await _trakt.getUserProfile();
-      traktUser = profile?['user']?['username']?.toString() ?? profile?['username']?.toString();
-      traktStats = await _trakt.getUserStats();
-    }
+Future<void> _loadSettings() async {
+  final streaming = await _settings.isStreamingModeEnabled();
+  final externalPlayer = await _settings.getExternalPlayer();
+  final sort = await _settings.getSortPreference();
+  final useDebrid = await _settings.useDebridForStreams();
+  final service = await _settings.getDebridService();
+  final addons = await _settings.getStremioAddons();
 
-    // Load Simkl status
-    final simklLoggedIn = await _simkl.isLoggedIn();
-    String? simklUser;
-    if (simklLoggedIn) {
-      final profile = await _simkl.getUserProfile();
-      simklUser = profile?['name']?.toString();
-    }
+  final torboxKey = await _debrid.getTorBoxKey();
+  final alldebridKey = await _debrid.getAllDebridKey();
+  final premiumizeKey = await _debrid.getPremiumizeKey();
+  final debridlinkKey = await _debrid.getDebridLinkKey();
+  final rdToken = await _debrid.getRDAccessToken();
 
-    // Load MDBlist status
-    final mdblistConfigured = await _mdblist.isConfigured();
-    String? mdblistUser;
-    final mdblistKey = await _mdblist.getApiKey();
-    if (mdblistConfigured) {
-      final info = await _mdblist.getUserInfo();
-      mdblistUser = info?['name']?.toString();
-    }
+  // Self-Debrid settings
+  final selfDebridUrl = await _debrid.getSelfDebridServerUrl();
+  final selfDebridKey = await _debrid.getSelfDebridApiKey();
 
-    // Load Jackett settings
-    final jackettUrl = await _settings.getJackettBaseUrl();
-    final jackettKey = await _settings.getJackettApiKey();
-    
-    // Load Prowlarr settings
-    final prowlarrUrl = await _settings.getProwlarrBaseUrl();
-    final prowlarrKey = await _settings.getProwlarrApiKey();
-    final prowlarrTagIds = await _settings.getProwlarrTagIds();
+  // Load Trakt status
+  final traktLoggedIn = await _trakt.isLoggedIn();
+  String? traktUser;
+  Map<String, dynamic>? traktStats;
 
-    // Load torrent cache settings
-    final cacheType = await _settings.getTorrentCacheType();
-    final ramCacheMb = await _settings.getTorrentRamCacheMb();
-    final connLimit = await _settings.getTorrentConnectionsLimit();
+  if (traktLoggedIn) {
+    final profile = await _trakt.getUserProfile();
 
-    // Load light mode
-    final lightMode = await _settings.isLightModeEnabled();
+    traktUser = profile?['user']?['username']?.toString() ??
+        profile?['username']?.toString();
 
-    // Load theme preset
-    final themePreset = await _settings.getThemePreset();
+    traktStats = await _trakt.getUserStats();
+  }
 
-    // Load navbar config
-    final navVisible = await _settings.getNavbarConfig();
-    // Full order: visible items first, then hidden items
-    final allIds = SettingsService.allNavIds;
-    final hidden = allIds.where((id) => !navVisible.contains(id)).toList();
-    final navOrder = [...navVisible, ...hidden];
+  // Load Simkl status
+  final simklLoggedIn = await _simkl.isLoggedIn();
+  String? simklUser;
 
-    // Load stream provider order
-    final streamOrder = await _settings.getStreamProviderOrder();
+  if (simklLoggedIn) {
+    final profile = await _simkl.getUserProfile();
+    simklUser = profile?['name']?.toString();
+  }
 
-    // Load track auto-select preferences
-    final preferredAudio = await _settings.getPreferredAudioLanguage();
-    final avoidUnsupported = await _settings.getAvoidUnsupportedAudio();
+  // Load MDBlist status
+  final mdblistConfigured = await _mdblist.isConfigured();
+  String? mdblistUser;
+  final mdblistKey = await _mdblist.getApiKey();
+
+  if (mdblistConfigured) {
+    final info = await _mdblist.getUserInfo();
+    mdblistUser = info?['name']?.toString();
+  }
+
+  // Load Jackett settings
+  final jackettUrl = await _settings.getJackettBaseUrl();
+  final jackettKey = await _settings.getJackettApiKey();
+
+  // Load Prowlarr settings
+  final prowlarrUrl = await _settings.getProwlarrBaseUrl();
+  final prowlarrKey = await _settings.getProwlarrApiKey();
+  final prowlarrTagIds = await _settings.getProwlarrTagIds();
+
+  // Load torrent cache settings
+  final cacheType = await _settings.getTorrentCacheType();
+  final ramCacheMb = await _settings.getTorrentRamCacheMb();
+  final connLimit = await _settings.getTorrentConnectionsLimit();
+
+  // Load light mode
+  final lightMode = await _settings.isLightModeEnabled();
+
+  // Load theme preset
+  final themePreset = await _settings.getThemePreset();
+
+  // Load navbar configuration
+  final navVisible = await _settings.getNavbarConfig();
+
+  // Full order: visible items first, then hidden items
+  final allIds = SettingsService.allNavIds;
+  final hidden = allIds
+      .where((id) => !navVisible.contains(id))
+      .toList();
+
+  final navOrder = [...navVisible, ...hidden];
+
+  // Load stream provider order
+  final streamOrder = await _settings.getStreamProviderOrder();
+
+  // Load track auto-select preferences
+  final preferredAudio =
+      await _settings.getPreferredAudioLanguage();
+
+  final avoidUnsupported =
+      await _settings.getAvoidUnsupportedAudio();
+
+  if (!mounted) return;
+
+  setState(() {
+    _isStreamingMode = streaming;
+
+    // Ensure saved player value is valid for the current platform
+    final validNames = ExternalPlayerService.playerNames;
+
+    _externalPlayer = validNames.contains(externalPlayer)
+        ? externalPlayer
+        : 'Built-in Player';
+
+    _sortPreference = sort;
+    _installedAddons = addons;
+
+    _useDebrid = useDebrid;
+    _debridService = service;
+
+    // Debrid settings
+    _torboxController.text = torboxKey ?? '';
+    _selfDebridUrlController.text = selfDebridUrl ?? '';
+    _selfDebridKeyController.text = selfDebridKey ?? '';
+    _alldebridController.text = alldebridKey ?? '';
+    _premiumizeController.text = premiumizeKey ?? '';
+    _debridlinkController.text = debridlinkKey ?? '';
+
+    // Real-Debrid
+    _isRDLoggedIn = rdToken != null;
+
+    // Trakt
+    _isTraktLoggedIn = traktLoggedIn;
+    _traktUsername = traktUser;
+    _traktStats = traktStats;
+
+    // Simkl
+    _isSimklLoggedIn = simklLoggedIn;
+    _simklUsername = simklUser;
+
+    // MDBlist
+    _isMdblistConfigured = mdblistConfigured;
+    _mdblistUsername = mdblistUser;
+    _mdblistApiKeyController.text = mdblistKey ?? '';
+
+    // Jackett
+    _jackettUrlController.text = jackettUrl ?? '';
+    _jackettApiKeyController.text = jackettKey ?? '';
+
+    // Prowlarr
+    _prowlarrUrlController.text = prowlarrUrl ?? '';
+    _prowlarrApiKeyController.text = prowlarrKey ?? '';
+    _prowlarrSelectedTagIds = prowlarrTagIds.toSet();
+
+    // Torrent cache
+    _torrentCacheType = cacheType;
+    _torrentRamCacheMb = ramCacheMb;
+    _torrentConnectionsLimit = connLimit;
+
+    // Appearance
+    _isLightMode = lightMode;
+    _selectedThemeId = themePreset;
+
+    // Navigation bar
+    _navbarVisible = navVisible;
+    _navbarOrder = navOrder;
+
+    // Stream providers
+    _streamProviderOrder = streamOrder;
+
+    // Track auto-select
+    _preferredAudioLang =
+        kTrackLanguageDisplayNames.contains(preferredAudio)
+            ? preferredAudio
+            : 'None';
+
+    _avoidUnsupportedAudio = avoidUnsupported;
+  });
+
+  // Pull dynamic Nuvio scrapers.
+  // One entry per enabled scraper so they appear
+  // alongside the built-in providers in the priority list.
+  try {
+    final entries =
+        await NuvioService.instance.getProviderEntries();
 
     if (mounted) {
       setState(() {
-        _isStreamingMode = streaming;
-        // Ensure saved value is in the current platform's player list
-        final validNames = ExternalPlayerService.playerNames;
-        _externalPlayer = validNames.contains(externalPlayer)
-            ? externalPlayer
-            : 'Built-in Player';
-        _sortPreference = sort;
-        _installedAddons = addons;
-        _useDebrid = useDebrid;
-        _debridService = service;
-        _torboxController.text = torboxKey ?? '';
-        _selfDebridUrlController.text = await _debrid.getSelfDebridServerUrl() ?? '';
-        _selfDebridKeyController.text = await _debrid.getSelfDebridApiKey() ?? '';
-        _alldebridController.text = alldebridKey ?? '';
-        _premiumizeController.text = premiumizeKey ?? '';
-        _debridlinkController.text = debridlinkKey ?? '';
-        _isRDLoggedIn = rdToken != null;
-        _isTraktLoggedIn = traktLoggedIn;
-        _traktUsername = traktUser;
-        _traktStats = traktStats;
-        _isSimklLoggedIn = simklLoggedIn;
-        _simklUsername = simklUser;
-        _isMdblistConfigured = mdblistConfigured;
-        _mdblistUsername = mdblistUser;
-        _mdblistApiKeyController.text = mdblistKey ?? '';
-        
-        _jackettUrlController.text = jackettUrl ?? '';
-        _jackettApiKeyController.text = jackettKey ?? '';
-        
-        _prowlarrUrlController.text = prowlarrUrl ?? '';
-        _prowlarrApiKeyController.text = prowlarrKey ?? '';
-        _prowlarrSelectedTagIds = prowlarrTagIds.toSet();
-        _torrentCacheType = cacheType;
-        _torrentRamCacheMb = ramCacheMb;
-        _torrentConnectionsLimit = connLimit;
-        _isLightMode = lightMode;
-        _selectedThemeId = themePreset;
-        _navbarVisible = navVisible;
-        _navbarOrder = navOrder;
-        _streamProviderOrder = streamOrder;
-        _preferredAudioLang = kTrackLanguageDisplayNames.contains(preferredAudio)
-            ? preferredAudio
-            : 'None';
-        _avoidUnsupportedAudio = avoidUnsupported;
+        _nuvioProviderEntries = entries;
       });
     }
-    // Pull dynamic Nuvio scrapers (one entry per enabled scraper) so they
-    // show up alongside the built-in providers in the priority list.
-    try {
-      final entries = await NuvioService.instance.getProviderEntries();
-      if (mounted) setState(() => _nuvioProviderEntries = entries);
-    } catch (_) {}
-    if ((prowlarrUrl?.isNotEmpty ?? false) && (prowlarrKey?.isNotEmpty ?? false)) {
-      _tryLoadProwlarrTags();
-    }
+  } catch (_) {
+    // Ignore Nuvio provider loading errors.
   }
+
+  // Load Prowlarr tags if configured
+  if ((prowlarrUrl?.isNotEmpty ?? false) &&
+      (prowlarrKey?.isNotEmpty ?? false)) {
+    _tryLoadProwlarrTags();
+  }
+   }
 
   Future<void> _installAddon() async {
     final url = _addonController.text.trim();
