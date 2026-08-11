@@ -1,0 +1,25 @@
+workflows:
+  playtorrio-self-debrid-android:
+    name: PlayTorrio Self-Debrid Android APK
+    working_directory: play
+    max_build_duration: 60
+
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Build release APK
+        script: |
+          flutter build apk --release \
+            --dart-define=TRAKT_CLIENT_ID="${TRAKT_CLIENT_ID:-}" \
+            --dart-define=TRAKT_CLIENT_SECRET="${TRAKT_CLIENT_SECRET:-}" \
+            --dart-define=SIMKL_CLIENT_ID="${SIMKL_CLIENT_ID:-}" \
+            --dart-define=SIMKL_CLIENT_SECRET="${SIMKL_CLIENT_SECRET:-}"
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
